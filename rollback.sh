@@ -14,23 +14,26 @@ fi
 
 sudo apt update
 
-# Hold kwin packages so apt upgrade skips them
-echo "Holding KWin packages at 6.5.5..."
+# Hold kwin/kscreen packages so apt upgrade skips them
+echo "Holding KWin and KScreen packages at 6.5.5..."
 sudo apt-mark hold \
-    kwin-common kwin-data kwin-wayland kwin-x11 kwin-x11-common kwin-style-breeze
+    kwin-common kwin-data kwin-wayland kwin-x11 kwin-x11-common kwin-style-breeze \
+    kscreen kscreenlocker
 
 # Upgrade everything else to latest (6.7.0)
 echo "Upgrading non-kwin packages..."
 sudo apt upgrade -y
 
-# Install kwin 6.5.5 from cache
+# Install kwin + kscreen 6.5.5 from cache
 DOWNGRADE_DIR="$HOME/downgrade_plasma_rescue"
 mkdir -p "$DOWNGRADE_DIR"
 rm -f "$DOWNGRADE_DIR"/*.deb
 cp /var/cache/apt/archives/kwin*6.5.5*.deb "$DOWNGRADE_DIR/" 2>/dev/null
+cp /var/cache/apt/archives/kscreen*6.5.5*.deb "$DOWNGRADE_DIR/" 2>/dev/null
+cp /var/cache/apt/archives/kscreenlocker*6.5.5*.deb "$DOWNGRADE_DIR/" 2>/dev/null
 rm -f "$DOWNGRADE_DIR"/*i386*.deb
 
-echo "Installing KWin 6.5.5 from cache..."
+echo "Installing KWin + KScreen 6.5.5 from cache..."
 cd "$DOWNGRADE_DIR"
 sudo apt install \
     ./kwin-common_4%3a6.5.5*.deb \
@@ -39,6 +42,8 @@ sudo apt install \
     ./kwin-x11_4%3a6.5.5*.deb \
     ./kwin-x11-common_4%3a6.5.5*.deb \
     ./kwin-style-breeze_4%3a6.5.5*.deb \
+    ./kscreen_4%3a6.5.5*.deb \
+    ./kscreenlocker_6.5.5*.deb \
     --allow-downgrades -y
 
 echo "Done. Run: sudo reboot"
