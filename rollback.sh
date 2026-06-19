@@ -1,5 +1,6 @@
 #!/bin/bash
 # Revert KWin + KScreen to 6.5.5 from local cache. KWin 6.7.0 breaks Wayland with DisplayLink (evdi).
+# kscreenlocker stays at 6.7.0 (required by plasma-workspace >= 6.7.0).
 # Rest of Plasma stays at whatever Neon offers.
 
 set -e
@@ -14,14 +15,14 @@ fi
 
 sudo apt update
 
-# Hold kwin/kscreen packages so apt upgrade skips them
+# Hold kwin + kscreen so apt upgrade skips them
 echo "Holding KWin and KScreen packages..."
 sudo apt-mark hold \
     kwin-common kwin-data kwin-wayland kwin-x11 kwin-x11-common kwin-style-breeze \
-    kscreen kscreenlocker
+    kscreen
 
-# Upgrade everything else to latest
-echo "Upgrading non-kwin packages..."
+# Upgrade everything else to latest (includes kscreenlocker -> 6.7.0)
+echo "Upgrading non-held packages..."
 sudo apt upgrade -y
 
 # Prepare local downgrade directory
@@ -30,11 +31,10 @@ mkdir -p "$DOWNGRADE_DIR"
 rm -f "$DOWNGRADE_DIR"/*.deb
 cp /var/cache/apt/archives/kwin*6.5.5*.deb "$DOWNGRADE_DIR/" 2>/dev/null
 cp /var/cache/apt/archives/kscreen_*6.5.5*.deb "$DOWNGRADE_DIR/" 2>/dev/null
-cp /var/cache/apt/archives/kscreenlocker*6.5.5*.deb "$DOWNGRADE_DIR/" 2>/dev/null
 rm -f "$DOWNGRADE_DIR"/*i386*.deb
 
-# Unhold kscreen/kscreenlocker so apt install can downgrade them
-sudo apt-mark unhold kscreen kscreenlocker
+# Unhold kscreen so apt can downgrade it
+sudo apt-mark unhold kscreen
 
 echo "Installing KWin + KScreen 6.5.5 from cache..."
 cd "$DOWNGRADE_DIR"
@@ -46,12 +46,11 @@ sudo apt install \
     ./kwin-x11-common_4%3a6.5.5*.deb \
     ./kwin-style-breeze_4%3a6.5.5*.deb \
     ./kscreen_4%3a6.5.5*.deb \
-    ./kscreenlocker_6.5.5*.deb \
-    --allow-downgrades --allow-change-held-packages -y
+    --allow-downgrades -y
 
-# Re-apply hold after install
+# Re-apply hold
 sudo apt-mark hold \
     kwin-common kwin-data kwin-wayland kwin-x11 kwin-x11-common kwin-style-breeze \
-    kscreen kscreenlocker
+    kscreen
 
 echo "Done. Run: sudo reboot"
